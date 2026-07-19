@@ -1,0 +1,22 @@
+﻿.venv311/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+runs/
+*.prof
+.pytest_cache/
+.coverage
+htmlcov/
+.env
+
+# Arquivos de entrada e mídia gerada
+*.mp4
+*.avi
+*.mov
+*.mkv
+
+# Artefatos locais de IDE e sistema
+.vscode/
+.idea/
+Thumbs.db

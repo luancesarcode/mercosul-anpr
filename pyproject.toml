@@ -1,0 +1,3 @@
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q --cov=pipeline.associator --cov=pipeline.tracker --cov=pipeline.temporal_voter --cov=pipeline.processor --cov=vision.ocr_rules --cov-report=term-missing --cov-fail-under=85"
