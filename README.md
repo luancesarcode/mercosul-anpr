@@ -1,6 +1,6 @@
 ﻿# ANPR Pipeline (Production-Ready)
 
-Repositório: `anpr-mercosul-pipeline`
+Repositório: `mercosul-anpr`
 
 Sistema ANPR (Automatic Number Plate Recognition) para Windows 10/11 com:
 
