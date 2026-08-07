@@ -1,179 +1,196 @@
-﻿# ANPR Pipeline (Production-Ready)
+# Mercosul ANPR
 
-Repositório: `mercosul-anpr`
+[![CI](https://github.com/luancesarcode/mercosul-anpr/actions/workflows/ci.yml/badge.svg)](https://github.com/luancesarcode/mercosul-anpr/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![Python](https://img.shields.io/badge/Python-3.10%20%7C%203.11-blue.svg)](pyproject.toml)
 
-Sistema ANPR (Automatic Number Plate Recognition) para Windows 10/11 com:
+Pipeline open source para reconhecimento de placas brasileiras em imagens e vídeos. Combina YOLO, PaddleOCR, rastreamento e voto temporal com CLI, API REST, interface web local e resultados versionados em JSON/CSV.
 
-- deteccao de veiculos (YOLO)
-- deteccao de placas (YOLO, global + ROI)
-- OCR PaddleOCR
-- validacao/correcao Mercosul e padrao antigo
-- voto temporal por `track_id`
-- logs incrementais com rotacao
-- profiling e validacao de sistema
+> **Estado:** alpha. A base técnica é reproduzível, mas a precisão ainda depende de um benchmark público com dados autorizados. Não use o projeto para decisões automáticas de fiscalização, segurança ou identificação de pessoas.
 
-## Arquitetura
+## Recursos
 
-```text
-core/
-  config.py
-  constants.py
-  logger.py
-  profiling.py
+- Detecção de veículos e placas com YOLO.
+- OCR para placas Mercosul e padrão brasileiro anterior.
+- Associação placa/veículo, tracking e estabilização temporal.
+- Pré-processamento OCR com upscale, CLAHE, binarização, rotação pela faixa azul e consenso entre variantes.
+- Conversões contextuais ponderadas, limite contra correções excessivas e confiança ajustada para cada leitura.
+- Imagem ou vídeo anotado, log humano, JSON versionado e CSV consolidado.
+- CLI instalável, API OpenAPI e interface responsiva com upload, progresso e downloads.
+- Jobs locais com limite de upload, timeout, retenção e chave de API opcional.
+- Modelos carregados uma única vez entre jobs da API.
+- Ambiente Windows reproduzível, CI com lint e testes e cobertura mínima de 85%.
+- Benchmark reproduzível que exige origem e permissão dos exemplos.
 
-pipeline/
-  processor.py
-  tracker.py
-  associator.py
-  temporal_voter.py
+## Início rápido — interface web local
 
-vision/
-  vehicle_detector.py
-  plate_detector.py
-  ocr_engine.py
-  ocr_rules.py
-  ocr/
-    aplicar_ocr.py
-    processar_contorno.py
-    processar_imagem.py
-    utils.py
-
-render/
-  overlay.py
-  exporter.py
-
-io_layer/
-  video_reader.py
-  result_writer.py
-
-tests/
-  test_tracking.py
-  test_association.py
-  test_ocr.py
-  test_pipeline.py
-  test_temporal_voter.py
-
-main.py
-```
-
-Observacao: as importacoes usam `io_layer/` para evitar conflito com o modulo padrao `io` do Python. Arquivos nao essenciais ao fluxo principal (antigo diretorio `io/`, `validate_system.py`, relatorio tecnico) foram movidos para `usarDepois/`.
-
-## Requisitos
-
-- Python >= 3.10 (recomendado 3.11)
-- Windows 10/11
-
-## Instalacao
-
-### PowerShell
+Requisitos: Git e Python 3.10 ou 3.11 de 64 bits.
 
 ```powershell
-.\install.ps1
+git clone https://github.com/luancesarcode/mercosul-anpr.git
+cd mercosul-anpr
+.\install.ps1 -Dev
+.\.venv311\Scripts\Activate.ps1
+mercosul-anpr-api
 ```
 
-### CMD
+Abra [http://localhost:8000](http://localhost:8000). A documentação interativa da API fica em [http://localhost:8000/docs](http://localhost:8000/docs).
 
-```cmd
-install.bat
+Entradas e resultados permanecem na máquina. Jobs e artefatos são gravados em `runs/jobs/`; os modelos internos do PaddleOCR ficam no cache do usuário.
+
+## Início rápido — CLI
+
+Coloque uma entrada em `Imagens_input/` ou `Videos_input/` e execute:
+
+```powershell
+.\.venv311\Scripts\Activate.ps1
+mercosul-anpr Imagens_input\minha-imagem.jpg
 ```
 
-## Configuracao via `.env`
+Para imprimir o contrato JSON também no terminal:
 
-Exemplo (`.env` na raiz):
+```powershell
+mercosul-anpr Imagens_input\minha-imagem.jpg --print-json
+```
+
+Os artefatos são gravados em `runs/predict/`:
+
+```text
+entrada.jpg    mídia anotada
+entrada.txt    resultado legível
+entrada.json   contrato completo por frame
+entrada.csv    uma linha consolidada por veículo/placa
+```
+
+## API local
+
+| Método | Endpoint | Finalidade |
+| --- | --- | --- |
+| `GET` | `/health` | Disponibilidade do serviço |
+| `GET` | `/version` | Versão da aplicação |
+| `GET` | `/metrics` | Métricas locais em formato Prometheus |
+| `POST` | `/api/v1/process/image` | Processamento síncrono de imagem |
+| `POST` | `/api/v1/jobs` | Cria job assíncrono para imagem ou vídeo |
+| `GET` | `/api/v1/jobs/{id}` | Consulta status e progresso |
+| `GET` | `/api/v1/jobs/{id}/result` | Retorna o JSON final |
+| `GET` | `/api/v1/jobs/{id}/artifacts/{tipo}` | Baixa mídia, JSON, CSV ou log |
+
+Consulte [docs/API.md](docs/API.md) e [docs/RESULT_SCHEMA.md](docs/RESULT_SCHEMA.md).
+
+## Estrutura
+
+```text
+src/mercosul_anpr/
+  application/   casos de uso compartilhados pela CLI e API
+  api/           HTTP, jobs, limites, autenticação e métricas
+  core/          configuração, logging e profiling
+  domain/        schema versionado de resultados
+  io_layer/      leitura de fontes e persistência
+  pipeline/      tracking, associação, voto temporal e orquestração
+  render/        overlays e exportação de mídia
+  vision/        detectores e OCR
+  web/           interface local em HTML, CSS e JavaScript
+tests/           testes automatizados
+benchmarks/      contrato do benchmark, sem dados pessoais
+docs/media/      espaços separados para imagens, GIFs e vídeos futuros
+```
+
+Detalhes em [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
+
+## Configuração
+
+Copie `.env.example` para `.env`. Argumentos da CLI têm precedência sobre ambiente e valores padrão.
+
+Configurações da interface/API:
 
 ```env
-ANPR_SOURCE=Videos_input/Test1.mp4
-ANPR_COCO_MODEL=modelos/yolov8n.pt
-ANPR_PLATE_MODEL=modelos/best.pt
-ANPR_RUNS_DIR=runs/predict
-ANPR_USE_ROI_DETECTION=true
-ANPR_USE_HYBRID_ASSOCIATION=true
-ANPR_ASSOCIATION_THRESHOLD=0.34
-ANPR_ROI_CACHE_TTL=2
-ANPR_PLATE_MIN_OCCURRENCES=2
-ANPR_PLATE_MIN_SCORE=65.0
+ANPR_MAX_UPLOAD_MB=100
+ANPR_JOB_TIMEOUT_SECONDS=1800
+ANPR_JOB_RETENTION_HOURS=24
+# ANPR_API_KEY=uma-chave-forte
+```
+
+Configurações OCR:
+
+```env
+PADDLE_OCR_LANGS=pt,en
+OCR_MAX_VARIANTS=6
+OCR_EARLY_STOP_SCORE=98
 ANPR_OCR_INTERVAL_FRAMES=1
-ANPR_PLATE_TEXT_CONF_MIN=70.0
-ANPR_PLATE_TEXT_CONF_MAX=100.0
-ANPR_PLATE_BBOX_SMOOTH_ENABLED=true
-ANPR_PLATE_BBOX_SMOOTH_ALPHA=0.35
-ANPR_ENABLE_CPROFILE=false
-ANPR_ENABLE_LINE_PROFILER=false
 ```
 
-Crie rapidamente:
+Não altere thresholds com base em uma única imagem. Use o processo de [ajuste e benchmark de OCR](docs/OCR_TUNING.md).
 
-```powershell
-Copy-Item .env.example .env
+## Benchmark
+
+O repositório não inclui dataset. Crie um manifesto privado com dados autorizados e execute:
+
+```bash
+mercosul-anpr-benchmark benchmarks/manifest.csv
 ```
 
-## Execucao
+O relatório mede acerto da placa completa, acerto por caractere e latência média. Veja [benchmarks/README.md](benchmarks/README.md).
 
-### Modo padrao (compatibilidade com constante no `main.py`)
+## Demonstração visual
 
-```powershell
-.\.venv311\Scripts\python.exe main.py
-```
+Os blocos abaixo já reservam a apresentação do projeto sem publicar imagens de placas antes da revisão de privacidade e licença.
 
-### Com argumentos
+### Interface web
 
-```powershell
-.\.venv311\Scripts\python.exe main.py Videos_input\Test1.mp4 --plate-model modelos\best.pt --coco-model modelos\yolov8n.pt
-```
+<table>
+  <tr>
+    <th width="50%">Envio e acompanhamento</th>
+    <th width="50%">Resultado da análise</th>
+  </tr>
+  <tr>
+    <td align="center">
+      <br><em>Espaço reservado para a tela de upload.</em><br><br>
+      <code>docs/media/images/interface-upload.webp</code><br><br>
+    </td>
+    <td align="center">
+      <br><em>Espaço reservado para o resultado anotado.</em><br><br>
+      <code>docs/media/images/interface-resultado.webp</code><br><br>
+    </td>
+  </tr>
+</table>
 
-## Saidas
+### OCR em ação
 
-- Video/imagem anotado: `runs/predict/<nome>.mp4` ou `runs/predict/<nome>.jpg`
-- Log textual incremental da execucao: `runs/predict/<nome>.txt`
-- Log rotativo estruturado: `runs/logs/anpr.log`
-- cProfile (se habilitado): `runs/predict/profile_main.prof` e `runs/predict/profile_main.txt`
-- line_profiler (se habilitado): `runs/predict/line_profile.txt`
+<table>
+  <tr>
+    <th width="50%">Imagem de entrada autorizada</th>
+    <th width="50%">Detecção e leitura consolidadas</th>
+  </tr>
+  <tr>
+    <td align="center">
+      <br><em>Espaço reservado para uma placa fictícia ou autorizada.</em><br><br>
+      <code>docs/media/images/exemplo-entrada.webp</code><br><br>
+    </td>
+    <td align="center">
+      <br><em>Espaço reservado para a saída correspondente.</em><br><br>
+      <code>docs/media/images/exemplo-resultado.webp</code><br><br>
+    </td>
+  </tr>
+</table>
 
-## Logging estruturado
+### GIF do fluxo completo
 
-Formato de eventos por frame:
+<p align="center">
+  <br><em>Espaço reservado para um GIF curto: upload → processamento → resultado.</em><br><br>
+  <code>docs/media/gifs/fluxo-completo.gif</code><br><br>
+</p>
 
-```text
-[2026-02-17T14:32:11.321] FRAME=245 VEHICLE=3 PLATE=ABC1D23 CONF=0.9400 DETECTED=2
-```
+Os diretórios `docs/media/images/`, `docs/media/gifs/` e `docs/media/videos/` permanecem vazios até existirem mídias autorizadas. Consulte as regras em [docs/media/README.md](docs/media/README.md).
 
-## Testes
+## Limitações e pendências externas
 
-```powershell
-.\.venv311\Scripts\python.exe -m pytest
-```
+- A distribuição oficial usa Python e ambiente virtual; não há uma segunda configuração de runtime para manter em paralelo.
+- GPU continua opcional e experimental; a instalação local padrão usa PyTorch CPU.
+- A primeira execução requer internet para baixar modelos internos do PaddleOCR.
+- Origem e licença de redistribuição dos pesos em `modelos/` ainda precisam ser confirmadas pelo mantenedor.
+- Métricas públicas dependem de um conjunto de avaliação autorizado, que não deve ser inventado ou extraído de placas reais sem permissão.
+- A API usa uma fila local em processo; múltiplas réplicas exigem um backend de fila compartilhado.
 
-Configuracao de cobertura (`pyproject.toml`):
-- escopo de cobertura: `pipeline.*` + `vision.ocr_rules`
-- `cov-fail-under = 85`
+## Privacidade e licença
 
-## Anti-tremor e filtro de confianca
-
-- `ANPR_PLATE_MIN_OCCURRENCES`: minimo de ocorrencias no voto temporal antes de exibir.
-- `ANPR_PLATE_MIN_SCORE`: score medio minimo no voto temporal.
-- `ANPR_OCR_INTERVAL_FRAMES`: roda OCR a cada N frames por `track_id` (`1`=todos, `2/3`=mais rapido).
-- `ANPR_PLATE_TEXT_CONF_MIN` / `ANPR_PLATE_TEXT_CONF_MAX`: intervalo de confianca permitido para exibir placa.
-- `ANPR_PLATE_BBOX_SMOOTH_ENABLED`: ativa suavizacao do bbox de placa por `track_id`.
-- `ANPR_PLATE_BBOX_SMOOTH_ALPHA`: intensidade da suavizacao (`0.05` a `1.0`; menor = mais suave).
-
-## Validacao de sistema
-
-O script de validacao foi movido para `usarDepois/validate_system.py`. Para usa-lo, copie de volta para a raiz e execute:
-
-```powershell
-Copy-Item usarDepois\validate_system.py .\validate_system.py
-.\.venv311\Scripts\python.exe validate_system.py --source Videos_input\Test1.mp4 --max-frames 150 --min-fps 25 --max-ram-mb 1200
-```
-
-Verifica:
-
-- FPS medio
-- uso de memoria
-- estabilidade OCR
-- recuperacao apos falha injetada
-
-## Observacoes de compatibilidade
-
-- O formato dos outputs `[info]` e `[result]` foi mantido.
-- OCR continua em PaddleOCR com o mesmo pipeline base.
-- `main.py` permanece como entrypoint unico.
+Placas e imagens podem ser dados pessoais ou sensíveis. Processe somente ambientes autorizados e defina retenção compatível com seu contexto. O código usa [licença MIT](LICENSE); pesos e datasets podem ter licenças próprias.

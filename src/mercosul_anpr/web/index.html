@@ -1,0 +1,139 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="Interface local para reconhecimento de placas brasileiras com privacidade por padrão.">
+    <title>Mercosul ANPR — Leitura local de placas</title>
+    <link rel="stylesheet" href="/assets/styles.css">
+    <script src="/assets/app.js" defer></script>
+  </head>
+  <body>
+    <header class="topbar">
+      <a class="brand" href="/" aria-label="Mercosul ANPR — início">
+        <span class="brand-mark" aria-hidden="true">BR</span>
+        <span>Mercosul ANPR</span>
+      </a>
+      <nav aria-label="Navegação principal">
+        <a href="#processar">Processar</a>
+        <a href="/docs">API</a>
+        <a href="https://github.com/luancesarcode/mercosul-anpr" rel="noreferrer">GitHub</a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="hero" aria-labelledby="hero-title">
+        <div class="hero-copy">
+          <p class="eyebrow">Visão computacional • execução local</p>
+          <h1 id="hero-title">Reconheça placas brasileiras sem enviar seus dados para terceiros.</h1>
+          <p class="hero-lead">
+            Envie uma imagem ou vídeo, acompanhe o processamento e baixe o resultado anotado em JSON e CSV.
+            Tudo acontece nesta máquina.
+          </p>
+          <div class="hero-actions">
+            <a class="button primary" href="#processar">Começar análise</a>
+            <a class="button secondary" href="/docs">Explorar API</a>
+          </div>
+        </div>
+        <aside class="signal-card" aria-label="Características do serviço">
+          <div class="signal-head">
+            <span class="status-dot" aria-hidden="true"></span>
+            <span>Pipeline disponível</span>
+          </div>
+          <dl>
+            <div><dt>Placas</dt><dd>Mercosul e padrão antigo</dd></div>
+            <div><dt>Saídas</dt><dd>Imagem, vídeo, JSON e CSV</dd></div>
+            <div><dt>Privacidade</dt><dd>Processamento local</dd></div>
+            <div><dt>Execução</dt><dd>Python • CPU/GPU</dd></div>
+          </dl>
+        </aside>
+      </section>
+
+      <section class="workspace" id="processar" aria-labelledby="workspace-title">
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">Nova análise</p>
+            <h2 id="workspace-title">Selecione o arquivo</h2>
+          </div>
+          <p>JPG, PNG, WEBP, MP4, MOV ou MKV • limite configurável pelo servidor</p>
+        </div>
+
+        <form id="upload-form">
+          <label class="dropzone" id="dropzone" for="file-input">
+            <input id="file-input" name="file" type="file" accept="image/jpeg,image/png,image/webp,video/mp4,video/quicktime,video/x-matroska" required>
+            <span class="upload-symbol" aria-hidden="true">↑</span>
+            <strong>Arraste o arquivo para cá</strong>
+            <span>ou clique para procurar no computador</span>
+            <span class="file-selection" id="file-selection">Nenhum arquivo selecionado</span>
+          </label>
+
+          <details class="advanced">
+            <summary>Autenticação da API</summary>
+            <label for="api-key">Chave opcional</label>
+            <input id="api-key" type="password" autocomplete="off" placeholder="X-API-Key">
+            <small>A chave fica somente neste navegador e é usada se o servidor exigir autenticação.</small>
+          </details>
+
+          <button class="button primary submit" id="submit-button" type="submit">Processar arquivo</button>
+        </form>
+
+        <div class="notice" id="notice" role="status" aria-live="polite" hidden></div>
+
+        <section class="job-panel" id="job-panel" aria-labelledby="job-title" hidden>
+          <div class="job-header">
+            <div>
+              <p class="eyebrow">Acompanhamento</p>
+              <h3 id="job-title">Preparando análise</h3>
+            </div>
+            <span class="job-state" id="job-state">Na fila</span>
+          </div>
+          <div class="progress-track" aria-label="Progresso do processamento">
+            <span id="progress-bar"></span>
+          </div>
+          <p id="progress-copy">O arquivo foi recebido e aguarda processamento.</p>
+        </section>
+      </section>
+
+      <section class="results" id="results" aria-labelledby="results-title" hidden>
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">Resultado</p>
+            <h2 id="results-title">Análise concluída</h2>
+          </div>
+          <div class="download-actions" id="download-actions"></div>
+        </div>
+
+        <div class="result-grid">
+          <div class="preview-card">
+            <div class="preview-surface" id="preview-surface">
+              <p>A visualização do arquivo processado aparecerá aqui.</p>
+            </div>
+          </div>
+          <div class="summary-card">
+            <p class="eyebrow">Resumo da execução</p>
+            <dl class="summary-list" id="summary-list"></dl>
+          </div>
+        </div>
+
+        <div class="table-card">
+          <div class="table-heading">
+            <h3>Placas consolidadas</h3>
+            <span id="plate-count">0 resultados</span>
+          </div>
+          <div class="table-scroll">
+            <table>
+              <thead><tr><th>Track</th><th>Placa</th><th>Confiança</th><th>Frames</th><th>Ocorrências</th></tr></thead>
+              <tbody id="result-rows"></tbody>
+            </table>
+          </div>
+          <p class="empty-table" id="empty-table" hidden>Nenhuma placa válida foi confirmada nesta análise.</p>
+        </div>
+      </section>
+    </main>
+
+    <footer>
+      <p>Mercosul ANPR <span id="app-version"></span> • use somente dados e ambientes autorizados.</p>
+      <a href="/health">Status do serviço</a>
+    </footer>
+  </body>
+</html>
