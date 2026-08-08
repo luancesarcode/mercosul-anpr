@@ -6,7 +6,7 @@ Os pesos desta pasta são carregados pelo pacote Python local. Antes do primeiro
 | --- | --- | --- | --- |
 | `yolov8n.pt` | Detecção de veículos | `31E20DDE3DEF09E2CF938C7BE6FE23D9150BBBE503982AF13345706515F2EF95` | A confirmar |
 | `best.pt` | Detecção de placas | `62EFB271EC3502EFDEDA0022067F02D688F9C76E25305EF5854679E42AE25B4C` | A confirmar |
-| `license_plate_detector.pt` | Peso legado; não usado pela configuração padrão | `8EC3B254A6C87610F037A90957462CAFA11A9C03224E33A28C6A1D1AC2AC51B0` | A confirmar |
+| `modelo.pt` | Peso legado; não usado pela configuração padrão | `8EC3B254A6C87610F037A90957462CAFA11A9C03224E33A28C6A1D1AC2AC51B0` | A confirmar |
 
 ## Atualização
 

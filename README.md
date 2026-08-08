@@ -35,20 +35,14 @@ Os espaços abaixo fazem parte do layout oficial do projeto. Eles permanecem res
     <th width="33%">Resultado consolidado</th>
   </tr>
   <tr>
-    <td align="center"><img src="docs/media/images/interface-upload.webp" alt="Interface de envio de arquivo do Mercosul ANPR" width="100%"><br><br><em>Interface de envio de arquivo</em></td>
-    <td align="center"><img src="docs/media/images/camera-tempo-real.webp" alt="Interface de câmera ao vivo do Mercosul ANPR" width="100%"><br><br><em>Câmera ao vivo e leituras em tempo real</em></td>
-    <td align="center"><img src="docs/media/images/interface-resultado.webp" alt="Resultado consolidado de placa reconhecida" width="100%"><br><br><em>Resultado consolidado da análise</em></td>
+    <td align="center"><img src="docs/media/images/interface-upload.webp" alt="Interface de envio de arquivo do Mercosul ANPR" width="100%"><br><br><em>envio de arquivo</em></td>
+    <td align="center"><img src="docs/media/images/camera-tempo-real.webp" alt="Interface de câmera ao vivo do Mercosul ANPR" width="100%"><br><br><em>leituras em tempo real</em></td>
+    <td align="center"><img src="docs/media/images/interface-resultado.webp" alt="Resultado consolidado de placa reconhecida" width="100%"><br><br><em>Resultados da análise</em></td>
   </tr>
 </table>
 
-### Vídeo demonstrativo
-
 <p align="center">
-  <a href="https://raw.githubusercontent.com/luancesarcode/mercosul-anpr/main/docs/media/videos/demonstracao.mp4">
-    <img src="docs/media/images/video-demonstracao-poster.webp" alt="Abrir vídeo demonstrativo do Mercosul ANPR" width="70%">
-  </a><br>
-  <strong>▶ Clique na miniatura para assistir ao vídeo</strong><br>
-  <em>Recorte de demonstração: 00:16–00:35</em>
+  <img src="docs/media/gifs/demonstracao.gif" alt="Detecção e leitura de placa em veículo" width="70%"><br>
 </p>
 
 Consulte a [política de mídia](docs/media/README.md) antes de adicionar qualquer arquivo visual.
