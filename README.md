@@ -26,10 +26,6 @@
 
 O Mercosul ANPR combina YOLO, PaddleOCR, tracking e voto temporal para detectar veículos, localizar placas e consolidar leituras. A aplicação oferece CLI, API REST e uma interface web responsiva, mantendo entradas, frames da câmera e resultados na própria máquina.
 
-> **Primeiro release — v0.1.0 (alpha)**
-> Esta versão reúne a base funcional do projeto, a interface web, o modo de câmera ao vivo, a API local e o pipeline de detecção e OCR. A precisão deve ser validada com dados autorizados antes de qualquer uso operacional.
-
-
 ## Demonstração
 
 Os espaços abaixo fazem parte do layout oficial do projeto. Eles permanecem reservados até existirem mídias com autorização, licença e revisão de privacidade.
