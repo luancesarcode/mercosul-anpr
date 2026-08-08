@@ -8,6 +8,7 @@
   <a href="https://github.com/luancesarcode/mercosul-anpr/actions/workflows/ci.yml"><img alt="CI" src="https://github.com/luancesarcode/mercosul-anpr/actions/workflows/ci.yml/badge.svg"></a>
   <a href="LICENSE"><img alt="Licença MIT" src="https://img.shields.io/badge/License-MIT-yellow.svg"></a>
   <a href="pyproject.toml"><img alt="Python 3.10 e 3.11" src="https://img.shields.io/badge/Python-3.10%20%7C%203.11-blue.svg"></a>
+  <a href="https://github.com/luancesarcode/mercosul-anpr/releases/tag/v0.1.0"><img alt="Release v0.1.0" src="https://img.shields.io/github/v/release/luancesarcode/mercosul-anpr?display_name=tag&label=release"></a>
   <img alt="Status alpha" src="https://img.shields.io/badge/status-alpha-d8ff3e">
 </p>
 
@@ -20,6 +21,9 @@
 </p>
 
 O Mercosul ANPR combina YOLO, PaddleOCR, tracking e voto temporal para detectar veículos, localizar placas e consolidar leituras. A aplicação oferece CLI, API REST e uma interface web responsiva, mantendo entradas, frames da câmera e resultados na própria máquina.
+
+> **Primeiro release — v0.1.0 (alpha)**
+> Esta versão reúne a base funcional do projeto, a interface web, o modo de câmera ao vivo, a API local e o pipeline de detecção e OCR. A precisão deve ser validada com dados autorizados antes de qualquer uso operacional.
 
 
 ## Demonstração

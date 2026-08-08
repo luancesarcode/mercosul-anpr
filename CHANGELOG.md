@@ -1,8 +1,8 @@
 # Changelog
 
-Todas as mudanças relevantes serão documentadas neste arquivo. O projeto pretende seguir versionamento semântico a partir do primeiro release público.
+Todas as mudanças relevantes serão documentadas neste arquivo. O projeto segue versionamento semântico a partir do primeiro release público.
 
-## [Não publicado]
+## [0.1.0] - 2026-08-08
 
 ### Adicionado
 
