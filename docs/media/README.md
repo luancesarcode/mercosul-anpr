@@ -23,6 +23,7 @@ Antes de publicar uma mídia:
 images/interface-upload.webp
 images/camera-tempo-real.webp
 images/interface-resultado.webp
+images/banner.webp
 images/demonstracao.webp
 images/exemplo-entrada.webp
 images/exemplo-resultado.webp

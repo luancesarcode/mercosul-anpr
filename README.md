@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="docs/media/images/banner.webp" alt="Banner do Mercosul ANPR" width="100%">
+</p>
+
 <h1 align="center">Mercosul ANPR</h1>
 
 <p align="center">
