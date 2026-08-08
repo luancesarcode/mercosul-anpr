@@ -44,10 +44,10 @@ Os espaços abaixo fazem parte do layout oficial do projeto. Eles permanecem res
 ### Vídeo demonstrativo
 
 <p align="center">
-  <video controls preload="metadata" width="70%">
-    <source src="https://raw.githubusercontent.com/luancesarcode/mercosul-anpr/main/docs/media/videos/demonstracao.mp4" type="video/mp4">
-    Seu navegador não suporta a reprodução de vídeo. <a href="https://raw.githubusercontent.com/luancesarcode/mercosul-anpr/main/docs/media/videos/demonstracao.mp4">Baixar demonstração</a>.
-  </video><br>
+  <a href="https://raw.githubusercontent.com/luancesarcode/mercosul-anpr/main/docs/media/videos/demonstracao.mp4">
+    <img src="docs/media/images/video-demonstracao-poster.webp" alt="Abrir vídeo demonstrativo do Mercosul ANPR" width="70%">
+  </a><br>
+  <strong>▶ Clique na miniatura para assistir ao vídeo</strong><br>
   <em>Recorte de demonstração: 00:16–00:35</em>
 </p>
 
