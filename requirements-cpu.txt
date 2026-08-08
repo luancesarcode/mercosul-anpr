@@ -1,0 +1,6 @@
+# CPU profile for development, CI and machines without an NVIDIA GPU.
+--extra-index-url https://download.pytorch.org/whl/cpu
+
+-r requirements-common.txt
+torch==2.5.1+cpu
+torchvision==0.20.1+cpu

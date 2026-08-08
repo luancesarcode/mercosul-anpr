@@ -1,3 +1,61 @@
+[build-system]
+requires = ["setuptools>=75", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "mercosul-anpr"
+version = "0.1.0"
+description = "Pipeline ANPR para reconhecimento de placas brasileiras em imagens e vídeos."
+readme = "README.md"
+requires-python = ">=3.10,<3.13"
+license = "MIT"
+license-files = ["LICENSE"]
+authors = [
+  { name = "Luan César" },
+]
+keywords = ["anpr", "computer-vision", "ocr", "yolo", "mercosul"]
+classifiers = [
+  "Development Status :: 3 - Alpha",
+  "Operating System :: Microsoft :: Windows",
+  "Operating System :: POSIX :: Linux",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Topic :: Scientific/Engineering :: Image Recognition",
+]
+dynamic = ["dependencies"]
+
+[project.urls]
+Homepage = "https://github.com/luancesarcode/mercosul-anpr"
+Repository = "https://github.com/luancesarcode/mercosul-anpr"
+Issues = "https://github.com/luancesarcode/mercosul-anpr/issues"
+
+[project.scripts]
+mercosul-anpr = "mercosul_anpr.cli:main"
+mercosul-anpr-api = "mercosul_anpr.api.app:run"
+mercosul-anpr-benchmark = "mercosul_anpr.benchmark:main"
+
+[tool.setuptools]
+package-dir = { "" = "src" }
+
+[tool.setuptools.dynamic]
+dependencies = { file = ["requirements-common.txt"] }
+
+[tool.setuptools.packages.find]
+where = ["src"]
+include = ["mercosul_anpr*"]
+
+[tool.setuptools.package-data]
+mercosul_anpr = ["web/*.html", "web/assets/*.css", "web/assets/*.js"]
+
 [tool.pytest.ini_options]
 testpaths = ["tests"]
-addopts = "-q --cov=pipeline.associator --cov=pipeline.tracker --cov=pipeline.temporal_voter --cov=pipeline.processor --cov=vision.ocr_rules --cov-report=term-missing --cov-fail-under=85"
+addopts = "-q --cov=mercosul_anpr.pipeline.associator --cov=mercosul_anpr.pipeline.tracker --cov=mercosul_anpr.pipeline.temporal_voter --cov=mercosul_anpr.pipeline.processor --cov=mercosul_anpr.vision.ocr_rules --cov-report=term-missing --cov-fail-under=85"
+
+[tool.ruff]
+target-version = "py310"
+line-length = 120
+extend-exclude = [".venv*", "runs", "docs/media"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B"]

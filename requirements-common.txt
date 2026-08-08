@@ -1,0 +1,17 @@
+# Platform-independent runtime dependencies.
+# Public package metadata uses the backend-neutral PyTorch versions below;
+# requirements.txt or requirements-cpu.txt constrains the actual wheel build.
+opencv-python==4.11.0.86
+opencv-contrib-python==4.11.0.86
+numpy==1.26.4
+torch==2.5.1
+torchvision==0.20.1
+ultralytics==8.3.40
+paddlepaddle==2.6.2
+paddleocr==2.9.1
+python-dotenv==1.0.1
+psutil==6.1.1
+httpx==0.28.1
+fastapi==0.139.2
+uvicorn==0.51.0
+python-multipart==0.0.32

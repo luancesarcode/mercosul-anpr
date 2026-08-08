@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 
-from core.config import AssociationConfig
-from pipeline.associator import associar_placa_ao_veiculo
+from mercosul_anpr.core.config import AssociationConfig
+from mercosul_anpr.pipeline.associator import associar_placa_ao_veiculo
 
 
 def _cfg() -> AssociationConfig:

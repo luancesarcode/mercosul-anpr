@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 
-from core.config import TrackingConfig
-from pipeline.tracker import IoUTracker, iou_caixas
+from mercosul_anpr.core.config import TrackingConfig
+from mercosul_anpr.pipeline.tracker import IoUTracker, iou_caixas
 
 
 def test_iou_caixas_overlap() -> None:

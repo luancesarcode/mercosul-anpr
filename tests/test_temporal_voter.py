@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 
-from core.config import TrackingConfig
-from pipeline.temporal_voter import TemporalVoter
+from mercosul_anpr.core.config import TrackingConfig
+from mercosul_anpr.pipeline.temporal_voter import TemporalVoter
 
 
 def _config() -> TrackingConfig:

@@ -1,0 +1,19 @@
+* text=auto
+
+*.py text eol=lf
+*.toml text eol=lf
+*.yml text eol=lf
+*.yaml text eol=lf
+*.md text eol=lf
+*.txt text eol=lf
+.gitignore text eol=lf
+.dockerignore text eol=lf
+Dockerfile text eol=lf
+
+*.bat text eol=crlf
+*.ps1 text eol=crlf
+
+*.pt binary
+*.jpg binary
+*.png binary
+*.mp4 binary

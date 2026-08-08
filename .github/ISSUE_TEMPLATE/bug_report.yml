@@ -1,0 +1,52 @@
+name: Relatar um bug
+description: Informe um comportamento reproduzível que precisa ser corrigido.
+title: "[Bug]: "
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: Obrigado por ajudar a melhorar o Mercosul ANPR. Não inclua placas reais ou dados pessoais sem anonimização.
+  - type: textarea
+    id: description
+    attributes:
+      label: Descrição
+      description: O que aconteceu e o que você esperava que acontecesse?
+    validations:
+      required: true
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: Como reproduzir
+      description: Inclua comandos, configuração relevante e passos mínimos.
+      placeholder: |
+        1. Execute ...
+        2. Use a configuração ...
+        3. Observe ...
+    validations:
+      required: true
+  - type: dropdown
+    id: environment
+    attributes:
+      label: Ambiente
+      options:
+        - Docker
+        - Windows nativo
+        - Linux nativo
+        - Outro
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs relevantes
+      description: Remova caminhos pessoais, placas, credenciais e outros dados sensíveis.
+      render: shell
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Verificações
+      options:
+        - label: Procurei por issues semelhantes.
+          required: true
+        - label: Removi ou anonimizei dados pessoais.
+          required: true

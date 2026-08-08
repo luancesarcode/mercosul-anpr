@@ -1,0 +1,3 @@
+# Reproducible CPU development profile used by CI.
+-r requirements-cpu.txt
+-r requirements-dev-tools.txt

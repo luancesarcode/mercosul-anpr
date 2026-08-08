@@ -1,179 +1,281 @@
-﻿# ANPR Pipeline (Production-Ready)
+<h1 align="center">Mercosul ANPR</h1>
 
-Repositório: `mercosul-anpr`
+<p align="center">
+  Reconhecimento local de placas brasileiras em imagens, vídeos e câmera ao vivo.
+</p>
 
-Sistema ANPR (Automatic Number Plate Recognition) para Windows 10/11 com:
+<p align="center">
+  <a href="https://github.com/luancesarcode/mercosul-anpr/actions/workflows/ci.yml"><img alt="CI" src="https://github.com/luancesarcode/mercosul-anpr/actions/workflows/ci.yml/badge.svg"></a>
+  <a href="LICENSE"><img alt="Licença MIT" src="https://img.shields.io/badge/License-MIT-yellow.svg"></a>
+  <a href="pyproject.toml"><img alt="Python 3.10 e 3.11" src="https://img.shields.io/badge/Python-3.10%20%7C%203.11-blue.svg"></a>
+  <img alt="Status alpha" src="https://img.shields.io/badge/status-alpha-d8ff3e">
+</p>
 
-- deteccao de veiculos (YOLO)
-- deteccao de placas (YOLO, global + ROI)
-- OCR PaddleOCR
-- validacao/correcao Mercosul e padrao antigo
-- voto temporal por `track_id`
-- logs incrementais com rotacao
-- profiling e validacao de sistema
+<p align="center">
+  <a href="#demonstração">Demonstração</a> •
+  <a href="#início-rápido">Início rápido</a> •
+  <a href="#câmera-ao-vivo">Câmera</a> •
+  <a href="#api-local">API</a> •
+  <a href="docs/ARCHITECTURE.md">Arquitetura</a>
+</p>
+
+O Mercosul ANPR combina YOLO, PaddleOCR, tracking e voto temporal para detectar veículos, localizar placas e consolidar leituras. A aplicação oferece CLI, API REST e uma interface web responsiva, mantendo entradas, frames da câmera e resultados na própria máquina.
+
+> [!IMPORTANT]
+> O projeto está em estágio alpha. A suíte automatizada verifica comportamento e regressões, mas precisão de produção exige benchmark com dados representativos e autorizados. Não utilize o sistema isoladamente para fiscalização, segurança ou identificação de pessoas.
+
+## Demonstração
+
+Os espaços abaixo fazem parte do layout oficial do projeto. Eles permanecem reservados até existirem mídias com autorização, licença e revisão de privacidade.
+
+<table>
+  <tr>
+    <th width="33%">Envio de arquivo</th>
+    <th width="34%">Câmera em tempo real</th>
+    <th width="33%">Resultado consolidado</th>
+  </tr>
+  <tr>
+    <td align="center"><br><em>Screenshot reservada</em><br><br><code>docs/media/images/interface-upload.webp</code><br><br></td>
+    <td align="center"><br><em>Screenshot reservada</em><br><br><code>docs/media/images/camera-tempo-real.webp</code><br><br></td>
+    <td align="center"><br><em>Screenshot reservada</em><br><br><code>docs/media/images/interface-resultado.webp</code><br><br></td>
+  </tr>
+</table>
+
+<table>
+  <tr>
+    <th width="50%">Entrada autorizada</th>
+    <th width="50%">Detecção e OCR</th>
+  </tr>
+  <tr>
+    <td align="center"><br><em>Comparação reservada</em><br><br><code>docs/media/images/exemplo-entrada.webp</code><br><br></td>
+    <td align="center"><br><em>Comparação reservada</em><br><br><code>docs/media/images/exemplo-resultado.webp</code><br><br></td>
+  </tr>
+</table>
+
+### Vídeo e GIF demonstrativos
+
+<table>
+  <tr>
+    <th width="50%">Vídeo completo</th>
+    <th width="50%">Prévia rápida</th>
+  </tr>
+  <tr>
+    <td align="center"><br><em>Espaço reservado para instalação, upload e câmera.</em><br><br><code>docs/media/videos/demonstracao.mp4</code><br><br></td>
+    <td align="center"><br><em>Espaço reservado para o fluxo em poucos segundos.</em><br><br><code>docs/media/gifs/fluxo-completo.gif</code><br><br></td>
+  </tr>
+</table>
+
+Consulte a [política de mídia](docs/media/README.md) antes de adicionar qualquer arquivo visual.
+
+## Recursos
+
+| Área | Capacidades |
+| --- | --- |
+| Detecção | Veículos e placas com YOLO, busca global, ROI por veículo e fallback para placa isolada |
+| OCR | PaddleOCR, upscale, CLAHE, binarização, deskew pela faixa azul e múltiplas variantes |
+| Correção | Conversões contextuais ponderadas, limite contra correções excessivas e confiança ajustada |
+| Vídeo | Tracking por IoU, associação placa/veículo, suavização de caixas e voto temporal |
+| Câmera | Acesso pelo navegador, seleção de dispositivo, frames sequenciais e resultado anotado ao vivo |
+| Produtos | CLI instalável, API OpenAPI, interface web e resultados JSON/CSV versionados |
+| Operação | Jobs locais, limites de upload, timeout, retenção, métricas e chave de API opcional |
+| Qualidade | Ruff, pytest, cobertura mínima de 85%, build do pacote e CI no GitHub Actions |
 
 ## Arquitetura
 
-```text
-core/
-  config.py
-  constants.py
-  logger.py
-  profiling.py
-
-pipeline/
-  processor.py
-  tracker.py
-  associator.py
-  temporal_voter.py
-
-vision/
-  vehicle_detector.py
-  plate_detector.py
-  ocr_engine.py
-  ocr_rules.py
-  ocr/
-    aplicar_ocr.py
-    processar_contorno.py
-    processar_imagem.py
-    utils.py
-
-render/
-  overlay.py
-  exporter.py
-
-io_layer/
-  video_reader.py
-  result_writer.py
-
-tests/
-  test_tracking.py
-  test_association.py
-  test_ocr.py
-  test_pipeline.py
-  test_temporal_voter.py
-
-main.py
+```mermaid
+flowchart LR
+    A["Imagem, vídeo ou câmera"] --> B["Detector de veículos"]
+    B --> C["Detector de placas"]
+    C --> D["Pré-processamento"]
+    D --> E["PaddleOCR"]
+    E --> F["Regras contextuais"]
+    F --> G["Tracking e voto temporal"]
+    G --> H["Overlay, JSON e CSV"]
 ```
 
-Observacao: as importacoes usam `io_layer/` para evitar conflito com o modulo padrao `io` do Python. Arquivos nao essenciais ao fluxo principal (antigo diretorio `io/`, `validate_system.py`, relatorio tecnico) foram movidos para `usarDepois/`.
+A CLI, a API e a câmera reutilizam o mesmo serviço de aplicação e os mesmos modelos carregados. Sessões de câmera preservam o estado temporal entre frames sem criar arquivos intermediários. Veja [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
 
-## Requisitos
+## Início rápido
 
-- Python >= 3.10 (recomendado 3.11)
-- Windows 10/11
+Requisitos: Git e Python 3.10 ou 3.11 de 64 bits.
 
-## Instalacao
-
-### PowerShell
+### Windows PowerShell
 
 ```powershell
-.\install.ps1
+git clone https://github.com/luancesarcode/mercosul-anpr.git
+cd mercosul-anpr
+.\install.ps1 -Dev
+.\.venv311\Scripts\Activate.ps1
+mercosul-anpr-api
 ```
 
-### CMD
+### Windows CMD
 
-```cmd
+```bat
+git clone https://github.com/luancesarcode/mercosul-anpr.git
+cd mercosul-anpr
 install.bat
+.venv311\Scripts\activate.bat
+mercosul-anpr-api
 ```
 
-## Configuracao via `.env`
+Abra [http://localhost:8000](http://localhost:8000). A documentação interativa fica em [http://localhost:8000/docs](http://localhost:8000/docs).
 
-Exemplo (`.env` na raiz):
+Na primeira execução, o PaddleOCR pode baixar modelos internos para o cache do usuário.
+
+### Instalação CPU ou NVIDIA
+
+Os scripts detectam `nvidia-smi` automaticamente:
+
+- máquina com NVIDIA: instala o perfil CUDA 12.4 de `requirements.txt`;
+- máquina sem NVIDIA: instala `requirements-cpu.txt`;
+- CI e desenvolvimento CPU: usam `requirements-dev.txt`.
+
+Para forçar um perfil:
+
+```powershell
+.\install.ps1 -TorchVariant nvidia
+.\install.ps1 -TorchVariant cpu
+```
+
+```bat
+install.bat --nvidia
+install.bat --cpu
+```
+
+Também é possível instalar diretamente o perfil NVIDIA com `python -m pip install -r requirements.txt`. Ele usa as versões oficiais PyTorch `2.5.1` e TorchVision `0.20.1` para CUDA 12.4. Após instalar, abra **Ajustes → Testar NVIDIA** para confirmar o driver e a GPU. O PaddleOCR permanece no perfil CPU estável; `PADDLE_USE_GPU` exige uma instalação separada e compatível de `paddlepaddle-gpu`.
+
+## Câmera ao vivo
+
+1. Abra a interface em `http://localhost:8000`.
+2. Selecione **Câmera ao vivo**.
+3. Clique em **Ativar câmera** e autorize o navegador.
+4. Escolha o dispositivo desejado e clique em **Iniciar análise**.
+5. Mantenha o veículo estável por alguns frames para o voto temporal consolidar a leitura.
+6. Clique em **Encerrar** para fechar a sessão e liberar a câmera.
+
+O frontend redimensiona e comprime cada frame antes do envio. O próximo frame só é capturado quando o anterior termina, evitando fila crescente e consumo descontrolado de memória. A sessão é mantida em memória, aceita apenas um cliente local por vez e expira automaticamente quando fica inativa.
+
+> [!NOTE]
+> `getUserMedia` funciona em contexto seguro. `localhost` é aceito pelos navegadores modernos; ao acessar de outro dispositivo pela rede, configure HTTPS.
+
+## CLI
+
+```powershell
+mercosul-anpr Imagens_input\minha-imagem.jpg
+mercosul-anpr Videos_input\meu-video.mp4 --print-json
+```
+
+Os artefatos são gravados em `runs/predict/`:
+
+```text
+entrada.jpg|mp4   mídia anotada
+entrada.txt       resultado legível
+entrada.json      contrato completo por frame
+entrada.csv       uma linha consolidada por veículo/placa
+```
+
+## API local
+
+| Método | Endpoint | Finalidade |
+| --- | --- | --- |
+| `GET` | `/health` | Disponibilidade do serviço |
+| `GET` | `/version` | Versão da aplicação |
+| `GET` | `/metrics` | Métricas locais em formato Prometheus |
+| `GET` | `/api/v1/system/compute` | Consulta preferência e suporte CPU/NVIDIA |
+| `POST` | `/api/v1/system/compute/test` | Executa novamente o teste local de CUDA |
+| `PUT` | `/api/v1/system/compute` | Altera o dispositivo dos próximos processamentos |
+| `POST` | `/api/v1/process/image` | Processa uma imagem de forma síncrona |
+| `POST` | `/api/v1/jobs` | Cria um job assíncrono para imagem ou vídeo |
+| `GET` | `/api/v1/jobs/{id}` | Consulta status e progresso |
+| `GET` | `/api/v1/jobs/{id}/result` | Retorna o resultado estruturado |
+| `GET` | `/api/v1/jobs/{id}/artifacts/{tipo}` | Baixa mídia, JSON, CSV ou log |
+| `POST` | `/api/v1/realtime/sessions` | Abre uma sessão temporal de câmera |
+| `POST` | `/api/v1/realtime/sessions/{id}/frames` | Processa um frame em memória |
+| `DELETE` | `/api/v1/realtime/sessions/{id}` | Encerra e libera a sessão |
+
+Consulte [docs/API.md](docs/API.md) e [docs/RESULT_SCHEMA.md](docs/RESULT_SCHEMA.md).
+
+## Configuração
+
+Copie `.env.example` para `.env`. Argumentos da CLI têm precedência sobre ambiente e valores padrão.
 
 ```env
-ANPR_SOURCE=Videos_input/Test1.mp4
-ANPR_COCO_MODEL=modelos/yolov8n.pt
-ANPR_PLATE_MODEL=modelos/best.pt
-ANPR_RUNS_DIR=runs/predict
-ANPR_USE_ROI_DETECTION=true
-ANPR_USE_HYBRID_ASSOCIATION=true
-ANPR_ASSOCIATION_THRESHOLD=0.34
-ANPR_ROI_CACHE_TTL=2
-ANPR_PLATE_MIN_OCCURRENCES=2
-ANPR_PLATE_MIN_SCORE=65.0
+# Processamento: auto, cpu ou nvidia
+ANPR_COMPUTE_DEVICE=auto
+
+# API e jobs
+ANPR_MAX_UPLOAD_MB=100
+ANPR_JOB_TIMEOUT_SECONDS=1800
+ANPR_JOB_RETENTION_HOURS=24
+# ANPR_API_KEY=uma-chave-forte
+
+# Câmera
+ANPR_REALTIME_SESSION_TTL_SECONDS=300
+ANPR_REALTIME_MAX_FRAME_MB=5
+ANPR_REALTIME_MAX_DIMENSION=1280
+ANPR_REALTIME_JPEG_QUALITY=82
+
+# OCR
+PADDLE_USE_GPU=false
+PADDLE_OCR_LANGS=pt,en
+OCR_MAX_VARIANTS=6
+OCR_EARLY_STOP_SCORE=98
 ANPR_OCR_INTERVAL_FRAMES=1
-ANPR_PLATE_TEXT_CONF_MIN=70.0
-ANPR_PLATE_TEXT_CONF_MAX=100.0
-ANPR_PLATE_BBOX_SMOOTH_ENABLED=true
-ANPR_PLATE_BBOX_SMOOTH_ALPHA=0.35
-ANPR_ENABLE_CPROFILE=false
-ANPR_ENABLE_LINE_PROFILER=false
 ```
 
-Crie rapidamente:
+Em **Ajustes → Dispositivo de processamento**, a interface testa o PyTorch e mostra se CUDA está realmente disponível. A opção NVIDIA acelera os detectores YOLO e só pode ser aplicada quando a placa, o driver e uma distribuição do PyTorch com CUDA estiverem funcionando. O PaddleOCR mantém sua configuração própria por `PADDLE_USE_GPU`. A instalação padrão continua compatível com CPU; para habilitar GPU, instale a distribuição CUDA indicada para o seu ambiente pelo [seletor oficial do PyTorch](https://pytorch.org/get-started/locally/) e execute **Testar NVIDIA** novamente.
+
+Não ajuste thresholds com base em uma única imagem. Use o processo descrito em [docs/OCR_TUNING.md](docs/OCR_TUNING.md).
+
+## Benchmark e qualidade
+
+O repositório não inclui dataset. Crie um manifesto privado com dados autorizados e execute:
+
+```bash
+mercosul-anpr-benchmark benchmarks/manifest.csv
+```
+
+O relatório mede acerto da placa completa, acerto por caractere e latência média. Veja [benchmarks/README.md](benchmarks/README.md).
+
+Para reproduzir as verificações do CI:
 
 ```powershell
-Copy-Item .env.example .env
+.\.venv311\Scripts\python.exe -m ruff check .
+.\.venv311\Scripts\python.exe -m pytest
+.\.venv311\Scripts\python.exe -m build
 ```
 
-## Execucao
-
-### Modo padrao (compatibilidade com constante no `main.py`)
-
-```powershell
-.\.venv311\Scripts\python.exe main.py
-```
-
-### Com argumentos
-
-```powershell
-.\.venv311\Scripts\python.exe main.py Videos_input\Test1.mp4 --plate-model modelos\best.pt --coco-model modelos\yolov8n.pt
-```
-
-## Saidas
-
-- Video/imagem anotado: `runs/predict/<nome>.mp4` ou `runs/predict/<nome>.jpg`
-- Log textual incremental da execucao: `runs/predict/<nome>.txt`
-- Log rotativo estruturado: `runs/logs/anpr.log`
-- cProfile (se habilitado): `runs/predict/profile_main.prof` e `runs/predict/profile_main.txt`
-- line_profiler (se habilitado): `runs/predict/line_profile.txt`
-
-## Logging estruturado
-
-Formato de eventos por frame:
+## Estrutura do repositório
 
 ```text
-[2026-02-17T14:32:11.321] FRAME=245 VEHICLE=3 PLATE=ABC1D23 CONF=0.9400 DETECTED=2
+src/mercosul_anpr/
+  application/   casos de uso compartilhados
+  api/           HTTP, jobs e sessões de câmera
+  core/          configuração, logging e profiling
+  domain/        contratos versionados de resultados
+  io_layer/      leitura de fontes e persistência
+  pipeline/      associação, tracking e voto temporal
+  render/        overlays e exportação de mídia
+  vision/        detectores, pré-processamento e OCR
+  web/           interface local responsiva
+tests/           testes automatizados
+benchmarks/      contrato do benchmark, sem dataset
+docs/            arquitetura, API, tuning e mídia
 ```
 
-## Testes
+## Limitações conhecidas
 
-```powershell
-.\.venv311\Scripts\python.exe -m pytest
-```
+- O instalador escolhe CPU ou NVIDIA automaticamente; CUDA exige GPU e driver NVIDIA compatíveis.
+- Uma única sessão de câmera pode usar os modelos locais por vez.
+- O desempenho em tempo real depende de hardware, resolução e quantidade de variantes OCR.
+- A API usa fila em processo; múltiplas réplicas exigem backend de fila compartilhado.
+- A origem e a licença de redistribuição dos pesos em `modelos/` devem ser confirmadas antes de redistribuí-los.
 
-Configuracao de cobertura (`pyproject.toml`):
-- escopo de cobertura: `pipeline.*` + `vision.ocr_rules`
-- `cov-fail-under = 85`
+## Privacidade, uso responsável e licença
 
-## Anti-tremor e filtro de confianca
+Placas e imagens podem constituir dados pessoais ou sensíveis. Processe somente ambientes autorizados, reduza retenção, proteja a API quando exposta na rede e não publique exemplos sem revisar rostos, localização, metadados e licença.
 
-- `ANPR_PLATE_MIN_OCCURRENCES`: minimo de ocorrencias no voto temporal antes de exibir.
-- `ANPR_PLATE_MIN_SCORE`: score medio minimo no voto temporal.
-- `ANPR_OCR_INTERVAL_FRAMES`: roda OCR a cada N frames por `track_id` (`1`=todos, `2/3`=mais rapido).
-- `ANPR_PLATE_TEXT_CONF_MIN` / `ANPR_PLATE_TEXT_CONF_MAX`: intervalo de confianca permitido para exibir placa.
-- `ANPR_PLATE_BBOX_SMOOTH_ENABLED`: ativa suavizacao do bbox de placa por `track_id`.
-- `ANPR_PLATE_BBOX_SMOOTH_ALPHA`: intensidade da suavizacao (`0.05` a `1.0`; menor = mais suave).
+O código é distribuído sob a [licença MIT](LICENSE). Pesos de modelos e datasets podem possuir licenças próprias.
 
-## Validacao de sistema
-
-O script de validacao foi movido para `usarDepois/validate_system.py`. Para usa-lo, copie de volta para a raiz e execute:
-
-```powershell
-Copy-Item usarDepois\validate_system.py .\validate_system.py
-.\.venv311\Scripts\python.exe validate_system.py --source Videos_input\Test1.mp4 --max-frames 150 --min-fps 25 --max-ram-mb 1200
-```
-
-Verifica:
-
-- FPS medio
-- uso de memoria
-- estabilidade OCR
-- recuperacao apos falha injetada
-
-## Observacoes de compatibilidade
-
-- O formato dos outputs `[info]` e `[result]` foi mantido.
-- OCR continua em PaddleOCR com o mesmo pipeline base.
-- `main.py` permanece como entrypoint unico.
+Contribuições são bem-vindas; consulte [CONTRIBUTING.md](CONTRIBUTING.md) e [SECURITY.md](SECURITY.md).
