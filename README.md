@@ -1,7 +1,7 @@
 <h1 align="center">Mercosul ANPR</h1>
 
 <p align="center">
-  Reconhecimento local de placas brasileiras em imagens, vídeos e câmera ao vivo.
+  Reconhecimento local de placas brasileiras em imagens, vídeos e câmera em tempo real.
 </p>
 
 <p align="center">
@@ -21,23 +21,21 @@
 
 O Mercosul ANPR combina YOLO, PaddleOCR, tracking e voto temporal para detectar veículos, localizar placas e consolidar leituras. A aplicação oferece CLI, API REST e uma interface web responsiva, mantendo entradas, frames da câmera e resultados na própria máquina.
 
-> [!IMPORTANT]
-> O projeto está em estágio alpha. A suíte automatizada verifica comportamento e regressões, mas precisão de produção exige benchmark com dados representativos e autorizados. Não utilize o sistema isoladamente para fiscalização, segurança ou identificação de pessoas.
 
 ## Demonstração
 
 Os espaços abaixo fazem parte do layout oficial do projeto. Eles permanecem reservados até existirem mídias com autorização, licença e revisão de privacidade.
 
-<table>
+<table width="100%">
   <tr>
-    <th width="33%">Envio de arquivo</th>
-    <th width="34%">Câmera em tempo real</th>
-    <th width="33%">Resultado consolidado</th>
+    <th width="33.33%">Envio de arquivo</th>
+    <th width="33.33%">Câmera em tempo real</th>
+    <th width="33.33%">Resultado consolidado</th>
   </tr>
   <tr>
-    <td align="center"><img src="docs/media/images/interface-upload.webp" alt="Interface de envio de arquivo do Mercosul ANPR" width="100%"><br><br><em>envio de arquivo</em></td>
-    <td align="center"><img src="docs/media/images/camera-tempo-real.webp" alt="Interface de câmera ao vivo do Mercosul ANPR" width="100%"><br><br><em>leituras em tempo real</em></td>
-    <td align="center"><img src="docs/media/images/interface-resultado.webp" alt="Resultado consolidado de placa reconhecida" width="100%"><br><br><em>Resultados da análise</em></td>
+    <td width="33.33%" align="center" valign="top"><img src="docs/media/images/interface-upload.webp" alt="Interface de envio de arquivo do Mercosul ANPR" width="100%"><br><em>Envio de arquivo</em></td>
+    <td width="33.33%" align="center" valign="top"><img src="docs/media/images/camera-tempo-real.webp" alt="Interface de câmera ao vivo do Mercosul ANPR" width="100%"><br><em>Câmera em tempo real</em></td>
+    <td width="33.33%" align="center" valign="top"><img src="docs/media/images/interface-resultado.webp" alt="Resultado consolidado de placa reconhecida" width="100%"><br><em>Resultado consolidado</em></td>
   </tr>
 </table>
 
@@ -244,13 +242,6 @@ benchmarks/      contrato do benchmark, sem dataset
 docs/            arquitetura, API, tuning e mídia
 ```
 
-## Limitações conhecidas
-
-- O instalador escolhe CPU ou NVIDIA automaticamente; CUDA exige GPU e driver NVIDIA compatíveis.
-- Uma única sessão de câmera pode usar os modelos locais por vez.
-- O desempenho em tempo real depende de hardware, resolução e quantidade de variantes OCR.
-- A API usa fila em processo; múltiplas réplicas exigem backend de fila compartilhado.
-- A origem e a licença de redistribuição dos pesos em `modelos/` devem ser confirmadas antes de redistribuí-los.
 
 ## Privacidade, uso responsável e licença
 
