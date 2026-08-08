@@ -5,9 +5,10 @@ O projeto usa o padrão `src-layout` para evitar imports acidentais do diretóri
 ## Fluxo
 
 ```text
-CLI ─────┐
-         ├─> ProcessingService -> InputSourceReader -> PipelineProcessor
-API/Web ─┘                         |                    |
+CLI ─────────┐
+             ├─> ProcessingService -> InputSourceReader -> PipelineProcessor
+API/Web ─────┤                         |                    |
+Câmera Web ──┘                         |                    |
                                   |                    +-> YOLO veículos
                                   |                    +-> tracking IoU
                                   |                    +-> YOLO placas/ROI
@@ -15,6 +16,7 @@ API/Web ─┘                         |                    |
                                   |                    +-> voto temporal
                                   |
                                   +-> mídia + TXT + JSON + CSV
+                                  +-> frame anotado em memória
 ```
 
 CLI e API dependem somente do serviço de aplicação. Elas não constroem detectores nem interpretam detalhes do pipeline.
@@ -22,7 +24,7 @@ CLI e API dependem somente do serviço de aplicação. Elas não constroem detec
 ## Pacotes
 
 - `application/`: coordena uma execução, reutiliza modelos e gera o contrato final.
-- `api/`: valida uploads, controla jobs, autenticação opcional, retenção, métricas e downloads.
+- `api/`: valida uploads, controla jobs e sessões de câmera, autenticação opcional, retenção, métricas e downloads.
 - `core/`: configuração imutável, constantes, logging e profiling.
 - `domain/`: dataclasses do schema público `1.0.0` e consolidação por track.
 - `io_layer/`: leitura uniforme de imagem/vídeo/stream e writers.
@@ -34,6 +36,8 @@ CLI e API dependem somente do serviço de aplicação. Elas não constroem detec
 ## Estado e concorrência
 
 `ProcessingService` mantém os modelos carregados, mas cria tracker e voto temporal novos para cada fonte. Um lock serializa inferências no processo, evitando estado cruzado e excesso de concorrência CPU. A fila local usa um worker e persiste snapshots de status em `runs/jobs/<id>/status.json`.
+
+`RealtimeSessionManager` reserva uma sessão local, preserva o `PipelineProcessor` entre frames e processa uma requisição por vez. O navegador só captura o frame seguinte depois da resposta anterior. As imagens da câmera são decodificadas, limitadas em resolução, inferidas e codificadas novamente sem escrita em disco. Jobs e câmera são mutuamente exclusivos para proteger o estado dos detectores compartilhados.
 
 Para várias réplicas, jobs devem migrar para uma fila externa e os artefatos para armazenamento compartilhado. O contrato de domínio e as rotas podem permanecer.
 
@@ -53,6 +57,7 @@ Precedência:
 - downloads são restritos aos artefatos registrados no diretório do job;
 - chave `X-API-Key` é opcional para redes confiáveis e obrigatória quando configurada;
 - jobs antigos são removidos pela retenção local;
+- frames da câmera existem somente em memória e a sessão expira quando fica ociosa;
 - entradas e saídas não são enviadas a serviços externos pelo código da aplicação;
 - modelos internos do PaddleOCR ainda são baixados na primeira execução.
 

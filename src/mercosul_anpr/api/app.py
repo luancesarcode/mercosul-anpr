@@ -12,12 +12,19 @@ from typing import Annotated, Any
 
 import uvicorn
 from fastapi import Depends, FastAPI, File, Header, HTTPException, UploadFile, status
-from fastapi.responses import FileResponse, JSONResponse, PlainTextResponse
+from fastapi.responses import FileResponse, JSONResponse, PlainTextResponse, Response
 from fastapi.staticfiles import StaticFiles
 from starlette.concurrency import run_in_threadpool
 
 from mercosul_anpr import __version__
 from mercosul_anpr.api.jobs import JobManager
+from mercosul_anpr.api.realtime import (
+    InvalidRealtimeFrame,
+    RealtimeFrameBusy,
+    RealtimeSessionBusy,
+    RealtimeSessionManager,
+    RealtimeSessionNotFound,
+)
 from mercosul_anpr.application.service import ProcessingService
 from mercosul_anpr.core.config import load_app_config
 from mercosul_anpr.core.constants import PROJECT_ROOT
@@ -76,17 +83,28 @@ def create_app() -> FastAPI:
         timeout_seconds=_env_int("ANPR_JOB_TIMEOUT_SECONDS", 1800),
         retention_hours=_env_int("ANPR_JOB_RETENTION_HOURS", 24),
     )
+    realtime = RealtimeSessionManager(
+        service,
+        session_ttl_seconds=_env_int("ANPR_REALTIME_SESSION_TTL_SECONDS", 300),
+        max_dimension=_env_int("ANPR_REALTIME_MAX_DIMENSION", 1280),
+        jpeg_quality=_env_int("ANPR_REALTIME_JPEG_QUALITY", 82),
+    )
     max_upload_bytes = max(1, _env_int("ANPR_MAX_UPLOAD_MB", 100)) * 1024 * 1024
+    max_realtime_frame_bytes = max(1, _env_int("ANPR_REALTIME_MAX_FRAME_MB", 5)) * 1024 * 1024
 
     @asynccontextmanager
     async def lifespan(_app: FastAPI):
         yield
+        realtime.shutdown()
         manager.shutdown()
 
     app = FastAPI(
         title="Mercosul ANPR API",
         summary="Reconhecimento local de placas brasileiras",
-        description="API local para processar imagens e vídeos, acompanhar jobs e baixar resultados estruturados.",
+        description=(
+            "API local para processar imagens e vídeos, analisar a câmera do navegador em tempo real, "
+            "acompanhar jobs e baixar resultados estruturados."
+        ),
         version=__version__,
         lifespan=lifespan,
         docs_url="/docs",
@@ -94,6 +112,7 @@ def create_app() -> FastAPI:
     )
     app.state.processing_service = service
     app.state.job_manager = manager
+    app.state.realtime_manager = realtime
     app.mount("/assets", StaticFiles(directory=WEB_ROOT / "assets"), name="assets")
 
     @app.get("/", include_in_schema=False)
@@ -113,7 +132,21 @@ def create_app() -> FastAPI:
         counts = manager.stats()
         lines = ["# HELP anpr_jobs Local jobs by status", "# TYPE anpr_jobs gauge"]
         lines.extend(f'anpr_jobs{{status="{key}"}} {value}' for key, value in counts.items())
+        lines.extend(
+            [
+                "# HELP anpr_realtime_sessions Active in-memory camera sessions",
+                "# TYPE anpr_realtime_sessions gauge",
+                f"anpr_realtime_sessions {realtime.active_count()}",
+            ]
+        )
         return "\n".join(lines) + "\n"
+
+    def require_no_realtime_session() -> None:
+        if realtime.active_count() > 0:
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail="Encerre a análise da câmera antes de iniciar um processamento de arquivo.",
+            )
 
     @app.post(
         "/api/v1/process/image",
@@ -121,6 +154,7 @@ def create_app() -> FastAPI:
         dependencies=[Depends(_require_api_key)],
     )
     async def process_image(file: Annotated[UploadFile, File(description="Imagem da placa ou veículo")]) -> Any:
+        require_no_realtime_session()
         filename = _safe_filename(file.filename)
         if Path(filename).suffix.lower() not in config.image_extensions:
             raise HTTPException(status_code=415, detail="Formato de imagem não suportado.")
@@ -148,6 +182,7 @@ def create_app() -> FastAPI:
     async def create_job(
         file: Annotated[UploadFile, File(description="Imagem ou vídeo para processar")],
     ) -> dict[str, Any]:
+        require_no_realtime_session()
         filename = _safe_filename(file.filename)
         extension = Path(filename).suffix.lower()
         allowed = config.image_extensions | ALLOWED_VIDEO_EXTENSIONS
@@ -157,6 +192,68 @@ def create_app() -> FastAPI:
         source_path = jobs_root / job_id / "input" / filename
         await _save_upload(file, source_path, max_upload_bytes)
         return manager.submit(job_id, source_path, filename).public_dict()
+
+    @app.post(
+        "/api/v1/realtime/sessions",
+        status_code=status.HTTP_201_CREATED,
+        tags=["Tempo real"],
+        dependencies=[Depends(_require_api_key)],
+    )
+    async def create_realtime_session() -> dict[str, Any]:
+        counts = manager.stats()
+        if counts["queued"] or counts["running"]:
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail="Aguarde o processamento de arquivo atual terminar antes de abrir a câmera.",
+            )
+        try:
+            return await run_in_threadpool(realtime.create_session)
+        except RealtimeSessionBusy as exc:
+            raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(exc)) from exc
+        except Exception as exc:
+            raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(exc)) from exc
+
+    @app.post(
+        "/api/v1/realtime/sessions/{session_id}/frames",
+        tags=["Tempo real"],
+        dependencies=[Depends(_require_api_key)],
+    )
+    async def process_realtime_frame(
+        session_id: str,
+        file: Annotated[UploadFile, File(description="Frame JPEG, PNG ou WEBP capturado pelo navegador")],
+    ) -> dict[str, Any]:
+        content_type = (file.content_type or "").lower()
+        if content_type not in {"image/jpeg", "image/png", "image/webp"}:
+            await file.close()
+            raise HTTPException(status_code=status.HTTP_415_UNSUPPORTED_MEDIA_TYPE, detail="Formato de frame inválido.")
+        payload = await file.read(max_realtime_frame_bytes + 1)
+        await file.close()
+        if len(payload) > max_realtime_frame_bytes:
+            raise HTTPException(
+                status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
+                detail=f"Frame excede o limite de {max_realtime_frame_bytes // (1024 * 1024)} MB.",
+            )
+        try:
+            return await run_in_threadpool(realtime.process_frame, session_id, payload)
+        except RealtimeSessionNotFound as exc:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(exc)) from exc
+        except RealtimeFrameBusy as exc:
+            raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(exc)) from exc
+        except InvalidRealtimeFrame as exc:
+            raise HTTPException(status_code=status.HTTP_415_UNSUPPORTED_MEDIA_TYPE, detail=str(exc)) from exc
+        except Exception as exc:
+            raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(exc)) from exc
+
+    @app.delete(
+        "/api/v1/realtime/sessions/{session_id}",
+        status_code=status.HTTP_204_NO_CONTENT,
+        tags=["Tempo real"],
+        dependencies=[Depends(_require_api_key)],
+    )
+    async def close_realtime_session(session_id: str) -> Response:
+        if not realtime.close_session(session_id):
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Sessão de câmera não encontrada.")
+        return Response(status_code=status.HTTP_204_NO_CONTENT)
 
     @app.get("/api/v1/jobs/{job_id}", tags=["Jobs"], dependencies=[Depends(_require_api_key)])
     async def get_job(job_id: str) -> dict[str, Any]:

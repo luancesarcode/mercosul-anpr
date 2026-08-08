@@ -10,9 +10,10 @@ Todas as mudanças relevantes serão documentadas neste arquivo. O projeto prete
 - Resultados estruturados em JSON e CSV com schema `1.0.0`.
 - Jobs locais, autenticação opcional, limites, retenção, métricas e downloads.
 - Interface responsiva para upload, progresso, visualização e artefatos.
+- Modo de câmera ao vivo com seleção de dispositivo, sessões temporais em memória, métricas e overlay atualizado por frame.
 - Benchmark com manifesto que exige origem e permissão de uso.
 - Pré-processamentos OCR com upscale, CLAHE, deskew e consenso limitado.
-- Espaços vazios e separados para vídeos e GIFs futuros.
+- Espaços vazios e separados para imagens, vídeos e GIFs futuros.
 - Execução local em Python para CPU, com GPU opcional.
 - Cache persistente dos modelos internos do PaddleOCR.
 - Metadados de pacote e comando `mercosul-anpr`.
@@ -29,3 +30,4 @@ Todas as mudanças relevantes serão documentadas neste arquivo. O projeto prete
 - Conversões contextuais do OCR agora usam penalidades por semelhança, limite de alterações, confiança ajustada e metadados auditáveis.
 - Detecções globais válidas são preservadas mesmo quando veículos não relacionados aparecem na imagem.
 - Persistência de jobs usa snapshots temporários exclusivos, retries e escrita limitada por intervalo.
+- README foi reorganizado como apresentação de portfólio, com arquitetura, recursos, uso da câmera e áreas reservadas para demonstrações.

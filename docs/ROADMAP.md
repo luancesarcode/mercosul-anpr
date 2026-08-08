@@ -27,6 +27,8 @@
 - [x] Limite de upload, timeout cooperativo e retenção.
 - [x] Autenticação opcional por chave.
 - [x] Interface responsiva com drag-and-drop e estados acessíveis.
+- [x] Câmera do navegador com seleção de dispositivo e frames anotados em tempo real.
+- [x] Sessão temporal em memória sem persistência automática dos frames.
 
 ### Qualidade e OCR
 
@@ -35,7 +37,7 @@
 - [x] Reutilização dos modelos entre jobs.
 - [x] Variantes OCR com upscale, CLAHE, binarização e deskew.
 - [x] Consenso limitado entre pré-processamentos.
-- [x] Pastas separadas e vazias para vídeos e GIFs futuros.
+- [x] Pastas separadas e vazias para imagens, vídeos e GIFs futuros.
 
 ## Dependências externas antes de um release estável
 

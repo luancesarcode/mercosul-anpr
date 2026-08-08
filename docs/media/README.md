@@ -21,10 +21,12 @@ Antes de publicar uma mídia:
 
 ```text
 images/interface-upload.webp
+images/camera-tempo-real.webp
 images/interface-resultado.webp
 images/exemplo-entrada.webp
 images/exemplo-resultado.webp
 gifs/fluxo-completo.gif
+videos/demonstracao.mp4
 ```
 
 Esses caminhos são apenas contratos de organização. Não adicione arquivos artificiais ou imagens reais sem revisar privacidade, autorização e licença.

@@ -15,7 +15,8 @@
         <span>Mercosul ANPR</span>
       </a>
       <nav aria-label="Navegação principal">
-        <a href="#processar">Processar</a>
+        <a href="#processar">Arquivo</a>
+        <a href="#processar" data-open-camera>Câmera</a>
         <a href="/docs">API</a>
         <a href="https://github.com/luancesarcode/mercosul-anpr" rel="noreferrer">GitHub</a>
       </nav>
@@ -27,12 +28,12 @@
           <p class="eyebrow">Visão computacional • execução local</p>
           <h1 id="hero-title">Reconheça placas brasileiras sem enviar seus dados para terceiros.</h1>
           <p class="hero-lead">
-            Envie uma imagem ou vídeo, acompanhe o processamento e baixe o resultado anotado em JSON e CSV.
-            Tudo acontece nesta máquina.
+            Analise imagens, vídeos ou a câmera ao vivo, acompanhe cada leitura e baixe resultados estruturados.
+            Tudo acontece nesta máquina, sem serviço externo de reconhecimento.
           </p>
           <div class="hero-actions">
             <a class="button primary" href="#processar">Começar análise</a>
-            <a class="button secondary" href="/docs">Explorar API</a>
+            <a class="button secondary" href="#processar" data-open-camera>Usar câmera</a>
           </div>
         </div>
         <aside class="signal-card" aria-label="Características do serviço">
@@ -43,6 +44,7 @@
           <dl>
             <div><dt>Placas</dt><dd>Mercosul e padrão antigo</dd></div>
             <div><dt>Saídas</dt><dd>Imagem, vídeo, JSON e CSV</dd></div>
+            <div><dt>Tempo real</dt><dd>Câmera do navegador</dd></div>
             <div><dt>Privacidade</dt><dd>Processamento local</dd></div>
             <div><dt>Execução</dt><dd>Python • CPU/GPU</dd></div>
           </dl>
@@ -53,45 +55,128 @@
         <div class="section-heading">
           <div>
             <p class="eyebrow">Nova análise</p>
-            <h2 id="workspace-title">Selecione o arquivo</h2>
+            <h2 id="workspace-title">Escolha como analisar</h2>
           </div>
-          <p>JPG, PNG, WEBP, MP4, MOV ou MKV • limite configurável pelo servidor</p>
+          <p>Arquivo completo ou câmera ao vivo • processamento local com os mesmos modelos</p>
         </div>
 
-        <form id="upload-form">
-          <label class="dropzone" id="dropzone" for="file-input">
-            <input id="file-input" name="file" type="file" accept="image/jpeg,image/png,image/webp,video/mp4,video/quicktime,video/x-matroska" required>
-            <span class="upload-symbol" aria-hidden="true">↑</span>
-            <strong>Arraste o arquivo para cá</strong>
-            <span>ou clique para procurar no computador</span>
-            <span class="file-selection" id="file-selection">Nenhum arquivo selecionado</span>
-          </label>
+        <div class="mode-tabs" role="tablist" aria-label="Modo de análise">
+          <button class="mode-tab active" id="file-tab" type="button" role="tab" aria-selected="true" aria-controls="file-panel" data-mode="file">
+            <span aria-hidden="true">01</span>
+            Arquivo
+          </button>
+          <button class="mode-tab" id="camera-tab" type="button" role="tab" aria-selected="false" aria-controls="camera-panel" data-mode="camera">
+            <span aria-hidden="true">02</span>
+            Câmera ao vivo
+          </button>
+        </div>
 
-          <details class="advanced">
-            <summary>Autenticação da API</summary>
-            <label for="api-key">Chave opcional</label>
-            <input id="api-key" type="password" autocomplete="off" placeholder="X-API-Key">
-            <small>A chave fica somente neste navegador e é usada se o servidor exigir autenticação.</small>
-          </details>
+        <div id="file-panel" role="tabpanel" aria-labelledby="file-tab">
+          <form id="upload-form">
+            <label class="dropzone" id="dropzone" for="file-input">
+              <input id="file-input" name="file" type="file" accept="image/jpeg,image/png,image/webp,video/mp4,video/quicktime,video/x-matroska" required>
+              <span class="upload-symbol" aria-hidden="true">↑</span>
+              <strong>Arraste o arquivo para cá</strong>
+              <span>JPG, PNG, WEBP, MP4, MOV ou MKV</span>
+              <span class="file-selection" id="file-selection">Nenhum arquivo selecionado</span>
+            </label>
 
-          <button class="button primary submit" id="submit-button" type="submit">Processar arquivo</button>
-        </form>
+            <button class="button primary submit" id="submit-button" type="submit">Processar arquivo</button>
+          </form>
+
+          <section class="job-panel" id="job-panel" aria-labelledby="job-title" hidden>
+            <div class="job-header">
+              <div>
+                <p class="eyebrow">Acompanhamento</p>
+                <h3 id="job-title">Preparando análise</h3>
+              </div>
+              <span class="job-state" id="job-state">Na fila</span>
+            </div>
+            <div class="progress-track" aria-label="Progresso do processamento">
+              <span id="progress-bar"></span>
+            </div>
+            <p id="progress-copy">O arquivo foi recebido e aguarda processamento.</p>
+          </section>
+        </div>
+
+        <div id="camera-panel" role="tabpanel" aria-labelledby="camera-tab" hidden>
+          <div class="camera-intro">
+            <div>
+              <p class="eyebrow">Captura local</p>
+              <h3>Aponte a câmera para um veículo</h3>
+              <p>O navegador pedirá permissão somente após seu clique. Os frames são processados em memória e não são salvos como jobs.</p>
+            </div>
+            <label class="camera-select-label" for="camera-select">
+              Câmera
+              <select id="camera-select" disabled>
+                <option value="">Câmera padrão</option>
+              </select>
+            </label>
+          </div>
+
+          <div class="camera-views">
+            <figure class="camera-view">
+              <figcaption><span class="view-dot"></span>Imagem local</figcaption>
+              <div class="camera-surface">
+                <video id="camera-video" muted playsinline aria-label="Prévia local da câmera"></video>
+                <div class="camera-placeholder" id="camera-placeholder">
+                  <span aria-hidden="true">◎</span>
+                  <p>A câmera ainda não foi ativada.</p>
+                </div>
+              </div>
+            </figure>
+            <figure class="camera-view analysis-view">
+              <figcaption><span class="view-dot analysis-dot" id="analysis-dot"></span>Resultado do modelo</figcaption>
+              <div class="camera-surface">
+                <img id="camera-output" alt="Frame da câmera com as detecções do modelo" hidden>
+                <div class="camera-placeholder" id="analysis-placeholder">
+                  <span aria-hidden="true">◇</span>
+                  <p>O frame anotado aparecerá aqui.</p>
+                </div>
+              </div>
+            </figure>
+          </div>
+
+          <canvas id="camera-canvas" hidden></canvas>
+
+          <div class="camera-controls">
+            <button class="button secondary" id="camera-start" type="button">Ativar câmera</button>
+            <button class="button primary" id="analysis-start" type="button" disabled>Iniciar análise</button>
+            <button class="button danger" id="camera-stop" type="button" disabled>Encerrar</button>
+            <p class="camera-state" id="camera-state" role="status" aria-live="polite">Aguardando permissão da câmera.</p>
+          </div>
+
+          <dl class="live-metrics" aria-label="Métricas em tempo real">
+            <div><dt>Frame</dt><dd id="live-frame">0</dd></div>
+            <div><dt>Veículos</dt><dd id="live-vehicles">0</dd></div>
+            <div><dt>Placas</dt><dd id="live-plates-count">0</dd></div>
+            <div><dt>Inferência</dt><dd id="live-fps">—</dd></div>
+            <div><dt>Latência</dt><dd id="live-latency">—</dd></div>
+          </dl>
+
+          <div class="live-table-card">
+            <div class="table-heading">
+              <h3>Leituras desta sessão</h3>
+              <span id="live-reading-count">0 placas</span>
+            </div>
+            <div class="table-scroll">
+              <table>
+                <thead><tr><th>Track</th><th>Placa</th><th>Confiança</th><th>Primeiro frame</th><th>Último frame</th><th>Ocorrências</th></tr></thead>
+                <tbody id="live-result-rows"></tbody>
+              </table>
+            </div>
+            <p class="empty-table" id="live-empty-table">Mantenha a placa visível por alguns frames para consolidar a leitura.</p>
+          </div>
+        </div>
+
+        <details class="advanced shared-auth">
+          <summary>Autenticação da API</summary>
+          <label for="api-key">Chave opcional</label>
+          <input id="api-key" type="password" autocomplete="off" placeholder="X-API-Key">
+          <small>A chave fica apenas nesta aba e é enviada somente ao servidor local.</small>
+        </details>
 
         <div class="notice" id="notice" role="status" aria-live="polite" hidden></div>
-
-        <section class="job-panel" id="job-panel" aria-labelledby="job-title" hidden>
-          <div class="job-header">
-            <div>
-              <p class="eyebrow">Acompanhamento</p>
-              <h3 id="job-title">Preparando análise</h3>
-            </div>
-            <span class="job-state" id="job-state">Na fila</span>
-          </div>
-          <div class="progress-track" aria-label="Progresso do processamento">
-            <span id="progress-bar"></span>
-          </div>
-          <p id="progress-copy">O arquivo foi recebido e aguarda processamento.</p>
-        </section>
       </section>
 
       <section class="results" id="results" aria-labelledby="results-title" hidden>

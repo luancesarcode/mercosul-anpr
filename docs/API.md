@@ -29,11 +29,33 @@ queued -> running -> completed
 
 Jobs de imagem e vídeo usam a mesma fila local. A execução dos modelos é serializada porque várias inferências CPU simultâneas normalmente aumentam latência e memória sem elevar throughput.
 
+## Câmera do navegador
+
+```bash
+# 1. Abre uma sessão e prepara os modelos
+curl -X POST http://localhost:8000/api/v1/realtime/sessions
+
+# 2. Envia frames sequencialmente usando o id retornado
+curl -F "file=@frame.jpg;type=image/jpeg" \
+  http://localhost:8000/api/v1/realtime/sessions/ID_DA_SESSAO/frames
+
+# 3. Encerra a sessão
+curl -X DELETE http://localhost:8000/api/v1/realtime/sessions/ID_DA_SESSAO
+```
+
+O endpoint de frame aceita JPEG, PNG ou WEBP e retorna contagem de veículos, placas válidas, métricas por estágio e a imagem anotada como data URL JPEG. Os frames não são persistidos. A sessão mantém tracker, cache de ROI e voto temporal em memória.
+
+Por segurança operacional, existe apenas uma sessão de câmera local por processo. Jobs de arquivo são rejeitados com `409` enquanto ela estiver ativa, e uma sessão não pode ser criada durante um job em execução.
+
 ## Limites
 
 - `ANPR_MAX_UPLOAD_MB`: tamanho máximo recebido, padrão 100 MB.
 - `ANPR_JOB_TIMEOUT_SECONDS`: tempo máximo observado pelo callback de progresso, padrão 1800 s.
 - `ANPR_JOB_RETENTION_HOURS`: retenção local, padrão 24 h.
+- `ANPR_REALTIME_SESSION_TTL_SECONDS`: expiração da sessão de câmera ociosa, padrão 300 s.
+- `ANPR_REALTIME_MAX_FRAME_MB`: limite de cada frame recebido, padrão 5 MB.
+- `ANPR_REALTIME_MAX_DIMENSION`: maior dimensão usada na inferência, padrão 1280 px.
+- `ANPR_REALTIME_JPEG_QUALITY`: qualidade da imagem anotada retornada, padrão 82.
 - Extensões são validadas antes da fila; conteúdo malformado é rejeitado pelo leitor na execução.
 
 O timeout é cooperativo entre frames. Uma inferência individual que travar em biblioteca nativa não pode ser interrompida com segurança por uma thread Python; produção crítica deve isolar workers em processos.

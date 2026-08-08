@@ -64,6 +64,25 @@ class ProcessingService:
                 enable_line_profiler=enable_line_profiler,
             )
 
+    def create_realtime_processor(self) -> PipelineProcessor:
+        """Create stateful frame processing while reusing loaded inference models."""
+        with self._run_lock:
+            self._require_file(self.config.coco_model_path, "Modelo COCO")
+            self._require_file(self.config.plate_model_path, "Modelo de placa")
+            return self._build_processor(self.config)
+
+    def process_realtime_frame(
+        self,
+        processor: PipelineProcessor,
+        frame: Any,
+        frame_idx: int,
+    ) -> Any:
+        """Process one camera frame without persisting it to disk."""
+        if frame is None or getattr(frame, "size", 0) == 0:
+            raise ValueError("Frame da câmera está vazio.")
+        with self._run_lock:
+            return processor.process_frame(frame, max(1, int(frame_idx)), confirmar_veiculo_imediato=False)
+
     def _process_locked(
         self,
         source: Path | str | int,
