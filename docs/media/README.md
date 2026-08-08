@@ -25,7 +25,6 @@ images/camera-tempo-real.webp
 images/interface-resultado.webp
 images/exemplo-entrada.webp
 images/exemplo-resultado.webp
-gifs/fluxo-completo.gif
 videos/demonstracao.mp4
 ```
 

@@ -16,6 +16,7 @@ build/
 
 # Arquivos de entrada e mídia gerada
 *.mp4
+!docs/media/videos/demonstracao.mp4
 *.avi
 *.mov
 *.mkv

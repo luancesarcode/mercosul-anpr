@@ -35,35 +35,21 @@ Os espaços abaixo fazem parte do layout oficial do projeto. Eles permanecem res
     <th width="33%">Resultado consolidado</th>
   </tr>
   <tr>
-    <td align="center"><br><em>Screenshot reservada</em><br><br><code>docs/media/images/interface-upload.webp</code><br><br></td>
-    <td align="center"><br><em>Screenshot reservada</em><br><br><code>docs/media/images/camera-tempo-real.webp</code><br><br></td>
-    <td align="center"><br><em>Screenshot reservada</em><br><br><code>docs/media/images/interface-resultado.webp</code><br><br></td>
+    <td align="center"><img src="docs/media/images/interface-upload.webp" alt="Interface de envio de arquivo do Mercosul ANPR" width="100%"><br><br><em>Interface de envio de arquivo</em></td>
+    <td align="center"><img src="docs/media/images/camera-tempo-real.webp" alt="Interface de câmera ao vivo do Mercosul ANPR" width="100%"><br><br><em>Câmera ao vivo e leituras em tempo real</em></td>
+    <td align="center"><img src="docs/media/images/interface-resultado.webp" alt="Resultado consolidado de placa reconhecida" width="100%"><br><br><em>Resultado consolidado da análise</em></td>
   </tr>
 </table>
 
-<table>
-  <tr>
-    <th width="50%">Entrada autorizada</th>
-    <th width="50%">Detecção e OCR</th>
-  </tr>
-  <tr>
-    <td align="center"><br><em>Comparação reservada</em><br><br><code>docs/media/images/exemplo-entrada.webp</code><br><br></td>
-    <td align="center"><br><em>Comparação reservada</em><br><br><code>docs/media/images/exemplo-resultado.webp</code><br><br></td>
-  </tr>
-</table>
+### Vídeo demonstrativo
 
-### Vídeo e GIF demonstrativos
-
-<table>
-  <tr>
-    <th width="50%">Vídeo completo</th>
-    <th width="50%">Prévia rápida</th>
-  </tr>
-  <tr>
-    <td align="center"><br><em>Espaço reservado para instalação, upload e câmera.</em><br><br><code>docs/media/videos/demonstracao.mp4</code><br><br></td>
-    <td align="center"><br><em>Espaço reservado para o fluxo em poucos segundos.</em><br><br><code>docs/media/gifs/fluxo-completo.gif</code><br><br></td>
-  </tr>
-</table>
+<p align="center">
+  <video controls preload="metadata" width="70%">
+    <source src="https://raw.githubusercontent.com/luancesarcode/mercosul-anpr/main/docs/media/videos/demonstracao.mp4" type="video/mp4">
+    Seu navegador não suporta a reprodução de vídeo. <a href="https://raw.githubusercontent.com/luancesarcode/mercosul-anpr/main/docs/media/videos/demonstracao.mp4">Baixar demonstração</a>.
+  </video><br>
+  <em>Recorte de demonstração: 00:16–00:35</em>
+</p>
 
 Consulte a [política de mídia](docs/media/README.md) antes de adicionar qualquer arquivo visual.
 
